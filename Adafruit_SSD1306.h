@@ -25,15 +25,15 @@
 #define _Adafruit_SSD1306_H_
 
 // ONE of the following three lines must be #defined:
-//#define SSD1306_128_64 ///< DEPRECTAED: old way to specify 128x64 screen
-#define SSD1306_128_32 ///< DEPRECATED: old way to specify 128x32 screen
-//#define SSD1306_96_16  ///< DEPRECATED: old way to specify 96x16 screen
-// This establishes the screen dimensions in old Adafruit_SSD1306 sketches
-// (NEW CODE SHOULD IGNORE THIS, USE THE CONSTRUCTORS THAT ACCEPT WIDTH
-// AND HEIGHT ARGUMENTS).
+#define SSD1306_128_64 ///< DEPRECTAED: old way to specify 128x64 screen
+// #define SSD1306_128_32 ///< DEPRECATED: old way to specify 128x32 screen
+// #define SSD1306_96_16  ///< DEPRECATED: old way to specify 96x16 screen
+//  This establishes the screen dimensions in old Adafruit_SSD1306 sketches
+//  (NEW CODE SHOULD IGNORE THIS, USE THE CONSTRUCTORS THAT ACCEPT WIDTH
+//  AND HEIGHT ARGUMENTS).
 
 // Uncomment to disable Adafruit splash logo
-//#define SSD1306_NO_SPLASH
+// #define SSD1306_NO_SPLASH
 
 #if defined(ARDUINO_STM32_FEATHER)
 typedef class HardwareSPI SPIClass;
@@ -53,7 +53,7 @@ typedef uint32_t PortMask;
 #define HAVE_PORTREG
 #elif defined(ARDUINO_ARCH_RTTHREAD)
 #undef HAVE_PORTREG
-#elif (defined(__arm__) || defined(ARDUINO_FEATHER52)) &&                      \
+#elif (defined(__arm__) || defined(ARDUINO_FEATHER52)) && \
     !defined(ARDUINO_ARCH_MBED) && !defined(ARDUINO_ARCH_RP2040)
 typedef volatile uint32_t PortReg;
 typedef uint32_t PortMask;
@@ -128,7 +128,8 @@ typedef uint32_t PortMask;
     @brief  Class that stores state and functions for interacting with
             SSD1306 OLED displays.
 */
-class Adafruit_SSD1306 : public Adafruit_GFX {
+class Adafruit_SSD1306 : public Adafruit_GFX
+{
 public:
   // NEW CONSTRUCTORS -- recommended for new projects
   Adafruit_SSD1306(uint8_t w, uint8_t h, TwoWire *twi = &Wire,
@@ -164,6 +165,7 @@ public:
   void ssd1306_command(uint8_t c);
   bool getPixel(int16_t x, int16_t y);
   uint8_t *getBuffer(void);
+  void setBuffer(uint8_t *buffer);
 
 protected:
   inline void SPIwrite(uint8_t d) __attribute__((always_inline));
@@ -171,13 +173,19 @@ protected:
   void drawFastVLineInternal(int16_t x, int16_t y, int16_t h, uint16_t color);
   void ssd1306_command1(uint8_t c);
   void ssd1306_commandList(const uint8_t *c, uint8_t n);
+  void deallocateBuffer(void);
 
   SPIClass *spi;   ///< Initialized during construction when using SPI. See
                    ///< SPI.cpp, SPI.h
   TwoWire *wire;   ///< Initialized during construction when using I2C. See
                    ///< Wire.cpp, Wire.h
   uint8_t *buffer; ///< Buffer data used for display buffer. Allocated when
-                   ///< begin method is called.
+  ///< begin method is called.
+  enum : bool
+  {
+    Borrowed,
+    Allocated
+  } bufferPolicy = Allocated;
   int8_t i2caddr;  ///< I2C address initialized when begin method is called.
   int8_t vccstate; ///< VCC selection, set by begin method.
   int8_t page_end; ///< not used
@@ -186,7 +194,7 @@ protected:
   int8_t clkPin;   ///< (Clock Pin) set when using SPI set during construction.
   int8_t dcPin;    ///< (Data Pin) set when using SPI set during construction.
   int8_t
-      csPin; ///< (Chip Select Pin) set when using SPI set during construction.
+      csPin;     ///< (Chip Select Pin) set when using SPI set during construction.
   int8_t rstPin; ///< Display reset pin assignment. Set during construction.
 
 #ifdef HAVE_PORTREG
@@ -204,5 +212,6 @@ protected:
   SPISettings spiSettings;
 #endif
 };
+#define ADAFRUIT_SSD1306_HAS_SETBUFFER 1
 
 #endif // _Adafruit_SSD1306_H_
